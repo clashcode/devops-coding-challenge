@@ -2,34 +2,10 @@
 
 resource "aws_ecs_cluster" "cluster" {
   name = "testapp"
-  setting {
-    name  = "containerInsights"
-    value = "enabled"
-  }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "capacity_providers" {
   cluster_name = aws_ecs_cluster.cluster.name
-}
-
-resource "aws_security_group" "testapp" {
-  name        = "testapp"
-  description = "Security group for testapp"
-  vpc_id      = "vpc-06e54f0e170d7f275"
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-  }
 }
 
 resource "aws_lb" "testapp" {
@@ -37,7 +13,7 @@ resource "aws_lb" "testapp" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [ aws_security_group.testapp.id ]
-  subnets            = [ "subnet-068d8181df0250c7a", "subnet-0932f2b361be94828" ]
+  subnets            = var.subnets
 }
 
 resource "aws_lb_listener" "testapp" {
@@ -60,7 +36,7 @@ resource "aws_lb_target_group" "testapp" {
 
   health_check {
     matcher = "200"
-    path = "/api/v1.0/health/ready"
+    path = "/"
     port = 80
   }
 }
@@ -90,7 +66,8 @@ resource "aws_ecs_task_definition" "testapp" {
         { name = "MEM_MX", value = "2048m" },
         { name = "DB_DEFAULT_URL", value = "jdbc:postgresql://testapp.eu-west-1.rds.amazonaws.com:5432/testapp" },
         { name = "DB_DEFAULT_USER", value = "testapp" },
-        { name = "DB_DEFAULT_PASSWORD", value = "xw3489sf" }
+        { name = "DB_DEFAULT_PASSWORD", value = "xw3489sf" },
+        { name = "S3_BUCKET", value = aws_s3_bucket.bucket.bucket }
       ]
     }
   ])
@@ -121,4 +98,24 @@ resource "aws_ecs_service" "testapp" {
     assign_public_ip   = true
   }
 
+}
+
+resource "aws_security_group" "testapp" {
+  name        = "testapp"
+  description = "Security group for testapp"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
 }
