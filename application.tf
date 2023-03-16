@@ -1,4 +1,4 @@
-
+# ECS cluster, service and load balancer for running the application
 
 resource "aws_ecs_cluster" "cluster" {
   name = "testapp"
@@ -53,6 +53,8 @@ resource "aws_ecs_task_definition" "testapp" {
   container_definitions = jsonencode([
     {
       name         = "testapp"
+
+      # this is a sample http container that responds on port 80
       image        = "yeasy/simple-web:latest"
       essential    = true
       portMappings = [
@@ -64,7 +66,7 @@ resource "aws_ecs_task_definition" "testapp" {
       environment = [
         { name = "HTTPPORT", value = "80" },
         { name = "MEM_MX", value = "2048m" },
-        { name = "DB_DEFAULT_URL", value = "jdbc:postgresql://testapp.eu-west-1.rds.amazonaws.com:5432/testapp" },
+        { name = "DB_DEFAULT_URL", value = "jdbc:postgresql://${aws_db_instance.database.endpoint}:5432/testapp" },
         { name = "DB_DEFAULT_USER", value = "testapp" },
         { name = "DB_DEFAULT_PASSWORD", value = "xw3489sf" },
         { name = "S3_BUCKET", value = aws_s3_bucket.bucket.bucket }

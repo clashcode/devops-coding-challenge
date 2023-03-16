@@ -1,3 +1,5 @@
+# Cloudfront CDN serving the load balancer from the ECS service
+
 resource "aws_cloudfront_distribution" "cloudfront" {
 
   comment                        = "testapp"
